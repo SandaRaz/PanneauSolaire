@@ -8,7 +8,7 @@
     List<Secteur> secteurs = structCoupure.secteurs;
 }
 <div class="container-fluid">
-    <form asp-action="HeureCoupure" asp-controller="Specific">
+    <form asp-action="HeureCoupure" asp-controller="Specific" style="margin-top: 2%">
         <div class="row mb-3">
             <div class="col-md">
                 <div class="form-floating formDiv">
@@ -23,6 +23,8 @@
             </div>
         </div>
     </form>
+
+    <hr />
 
     <form asp-action="HeureCoupureSecteur" asp-controller="Specific">
         <div class="row mb-3">
@@ -51,6 +53,8 @@
         </div>
     </form>
 
+    <hr />
+
     @if(ViewBag.Exceptions != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -65,23 +69,36 @@
             List<Prevision> previsions = tuple.Item2;
 
             <div class="row mb-3">
-                <div class="p-3 mb-2 bg-light text-dark">@secteur.Refs</div>
-                
-                @foreach (Prevision prevision in previsions)
-                {
-                    <div class="col-md-2">
-                        <b>Heure: @prevision.Heure</b>
-                        @if(prevision.Meteo != null){
-                            <p>Lumiere: @prevision.Meteo.Lumiere / @prevision.Meteo.LumiereMax</p>    
+                <div class="p-3 mb-2 bg-white text-dark">@secteur.Refs</div>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Jour</th>
+                        <th scope="col">Heure</th>
+                        <th scope="col">Lumière</th>
+                        <th scope="col">Panneau</th>
+                        <th scope="col">Batterie</th>
+                        <th scope="col">Personnes</th>
+                        <th scope="col">Consommation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (Prevision prevision in previsions)
+                        {
+                            <tr>
+                                <td>@prevision.Jour</td>
+                                <td>@prevision.Heure</td>
+                                @if(prevision.Meteo != null){
+                                    <td>@prevision.Meteo.Lumiere / @prevision.Meteo.LumiereMax</td>
+                                }
+                                <td>@prevision.PuissancePanneau</td>
+                                <td>@prevision.PuissanceBatterie</td>
+                                <td>@prevision.NbPersonne</td>
+                                <td>@prevision.ConsMoyenne</td>
+                            </tr>
                         }
-                        <p>Panneau: @prevision.PuissancePanneau</p>
-                        <p>Batterie: @prevision.PuissanceBatterie</p>
-                        <p>Personnes: @prevision.NbPersonne</p>
-                        <p>ConsUnitaire: @prevision.ConsMoyenne</p>
-                    </div>
-                }
+                </table>
             </div>
         }
     }
 </div>
-

@@ -15,15 +15,16 @@
     margin-top: 2%;
     margin-bottom: 1%;
 
-    background-color: rgb(245,245,245);
+    background-color: rgb(247,247,247);
 }
 
 .containercols {
-    border: 1px solid black;
+    border: 1px hidden black;
+    border-radius: 10px;
     min-height: 455px;
-
     margin-top: 2%;
     margin-bottom: 1%;
+    background-color: rgb(247,247,247);
 }
 
 .list {

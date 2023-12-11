@@ -177,7 +177,7 @@ namespace PanneauSolaire.Models.Entity
                     }
                     else
                     {
-                        Console.WriteLine($"GET InfoPersonnes ({this.Refs}, {jour}, {heure}) FROM SALLE HASN'T ANY ROW");
+                        //Console.WriteLine($"GET InfoPersonnes ({this.Refs}, {jour}, {heure}) FROM SALLE HASN'T ANY ROW");
                     }
                 }
             }
@@ -235,7 +235,7 @@ namespace PanneauSolaire.Models.Entity
                     }
                     else
                     {
-                        Console.WriteLine($"GET InfoPersonnes ({this.Refs}, {jour}, {heure}) FROM SALLE HASN'T ANY ROW");
+                        //Console.WriteLine($"GET InfoPersonnes ({this.Refs}, {jour}, {heure}) FROM SALLE HASN'T ANY ROW");
                     }
                 }
             }

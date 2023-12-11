@@ -58,6 +58,7 @@ namespace PanneauSolaire.Models.Entity
             List<double> consommations = new List<double>();
             List<Coupure> coupures = Coupure.getCoupures(cnx, this.Id);
             /* --- Iteration @ liste de coupure tany aloha --- */
+            Console.WriteLine("***** --- Iteration @ liste de coupure tany aloha --- *****");
             foreach (Coupure coupure in coupures)
             {
                 double incr = 0.3;
