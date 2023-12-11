@@ -30,12 +30,12 @@ namespace PanneauSolaire.Models.ViewStruct
         public double PuissancePanneau
         {
             get { return puissancePanneau; }
-            set { puissancePanneau = value; }
+            set { puissancePanneau = Math.Round(value, 2); }
         }
         public double PuissanceBatterie
         {
             get { return puissanceBatterie; }
-            set { puissanceBatterie = value; }
+            set { puissanceBatterie = Math.Round(value, 2); }
         }
         public double NbPersonne
         {
@@ -45,7 +45,7 @@ namespace PanneauSolaire.Models.ViewStruct
         public double ConsMoyenne
         {
             get { return consMoyenne; }
-            set { consMoyenne = value; }
+            set { consMoyenne = Math.Round(value, 2); }
         }
 
         public Prevision(DateOnly jour, TimeOnly heure, Meteo? meteo, double puissancePanneau, double puissanceBatterie, double nbPersonne, double consMoyenne)

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "WyaM8CO2i3HspcZexiHUttFSJncslk5hbCPacVjEPPr2McQfqb0lwKB4uKtkoXPlqeEuH516JgL7wxKfzgFp+w==",
+  "dgSpecHash": "qKbWS5sBMp0gwPaJf3FVLOdFD+pBk3DJurUxGcYoslchnx1DE/2GbYLQWdsfPodiPCzKfCRMeYAMiv/O4Ws9gA==",
   "success": true,
-  "projectFilePath": "E:\\Sanda\\ITU\\Archi Log\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj",
+  "projectFilePath": "E:\\Sanda\\ITU\\Archi Log\\Git\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Sanda\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.0\\microsoft.extensions.logging.abstractions.6.0.0.nupkg.sha512",
     "C:\\Users\\Sanda\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",

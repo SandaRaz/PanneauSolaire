@@ -52,8 +52,8 @@ namespace PanneauSolaire.Models.Entity
             Console.WriteLine($"    MOYENNE SUPPOSITION DE CONSOMMATION UNITAIRE: {suppositionConsUnitaire}");
 
             var heures = this.getHeureDebutFin(cnx, jour);
-            TimeOnly heureDebut = (TimeOnly)((heures.Item1 != null) ? heures.Item1 : new TimeOnly(1, 0, 0));
-            TimeOnly heureFin = (TimeOnly)((heures.Item2 != null) ? heures.Item2 : new TimeOnly(23, 0, 0));
+            TimeOnly heureDebut = heures.Item1;
+            TimeOnly heureFin = heures.Item2;
 
             List<double> consommations = new List<double>();
             List<Coupure> coupures = Coupure.getCoupures(cnx, this.Id);
@@ -135,8 +135,8 @@ namespace PanneauSolaire.Models.Entity
 
             /* --- alaina ny heure voalohany sy ny heure farany ao anaty Presence(InfoSalle) --- */
             var heures = this.getHeureDebutFin(cnx, jour);
-            TimeOnly heureDebut = (TimeOnly)((heures.Item1 != null) ? heures.Item1 : new TimeOnly(1, 0, 0));
-            TimeOnly heureFin = (TimeOnly)((heures.Item2 != null) ? heures.Item2 : new TimeOnly(23, 0, 0));
+            TimeOnly heureDebut = heures.Item1;
+            TimeOnly heureFin = heures.Item2;
             /* --------------------------------------------------------------------------------- */
             
             double trancheHeure = 1;
@@ -456,10 +456,10 @@ namespace PanneauSolaire.Models.Entity
             return infosSalles;
         }
 
-        public (TimeOnly?, TimeOnly?) getHeureDebutFin(NpgsqlConnection cnx, DateOnly jour)
+        public (TimeOnly, TimeOnly) getHeureDebutFin(NpgsqlConnection cnx, DateOnly jour)
         {
-            TimeOnly? debut = null;
-            TimeOnly? fin = null;
+            TimeOnly debut = new TimeOnly(08,00);
+            TimeOnly fin = new TimeOnly(17,00);
 
             bool isclosed = false;
             if (cnx.State == System.Data.ConnectionState.Closed)

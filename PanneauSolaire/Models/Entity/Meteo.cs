@@ -191,7 +191,8 @@ namespace PanneauSolaire.Models.Entity
                     }
                     else
                     {
-                        throw new Exception($"GET METEO BY DAY:{jour} AND HOUR:{heure} FROM METEO HASN'T ANY ROW (Pas de donnees meteorologique de cet heure dans la base)");
+                        Console.Error.WriteLine($"GET METEO BY DAY:{jour} AND HOUR:{heure} FROM METEO HASN'T ANY ROW (Pas de donnees meteorologique de cet heure dans la base)");
+                        //throw new Exception($"GET METEO BY DAY:{jour} AND HOUR:{heure} FROM METEO HASN'T ANY ROW (Pas de donnees meteorologique de cet heure dans la base)");
                     }
                 }
             }

@@ -6,10 +6,12 @@
     <title>@ViewData["Title"] - PanneauSolaire</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/coupure.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PanneauSolaire.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
+<!--
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">PanneauSolaire</a>
@@ -29,13 +31,27 @@
                 </div>
             </div>
         </nav>
+-->
     </header>
     <div class="container">
+        <div class="row">
+            <div class="col-md-3 navcols">
+                <a asp-area="" asp-action="Coupure" asp-controller="Specific">
+                    <div class="list">Prevision coupure</div>
+                </a>
+            </div>
+            <div class="col-md-8 containercols">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+<!--
+    <div class="container">
         <main role="main" class="pb-3">
-            @RenderBody()
+            
         </main>
     </div>
-
+-->
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2023 - PanneauSolaire - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>

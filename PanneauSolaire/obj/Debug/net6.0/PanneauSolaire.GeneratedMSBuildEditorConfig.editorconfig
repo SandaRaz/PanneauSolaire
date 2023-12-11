@@ -8,45 +8,45 @@ build_property.PlatformNeutralAssembly =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = PanneauSolaire
 build_property.RootNamespace = PanneauSolaire
-build_property.ProjectDir = E:\Sanda\ITU\Archi Log\PanneauSolaire\PanneauSolaire\
+build_property.ProjectDir = E:\Sanda\ITU\Archi Log\Git\PanneauSolaire\PanneauSolaire\
 build_property.RazorLangVersion = 6.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = E:\Sanda\ITU\Archi Log\PanneauSolaire\PanneauSolaire
+build_property.MSBuildProjectDirectory = E:\Sanda\ITU\Archi Log\Git\PanneauSolaire\PanneauSolaire
 build_property._RazorSourceGeneratorDebug = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Home/Index.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Home/Privacy.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Shared/Error.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Shared/_ValidationScriptsPartial.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Specific/Coupure.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Specific/Coupure.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3BlY2lmaWNcQ291cHVyZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Specific/Index.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Specific/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3BlY2lmaWNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/_ViewImports.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/_ViewStart.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/Sanda/ITU/Archi Log/PanneauSolaire/PanneauSolaire/Views/Shared/_Layout.cshtml]
+[E:/Sanda/ITU/Archi Log/Git/PanneauSolaire/PanneauSolaire/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-zk3oer3sf3

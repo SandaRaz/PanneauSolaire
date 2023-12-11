@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Sanda\\ITU\\Archi Log\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj": {}
+    "E:\\Sanda\\ITU\\Archi Log\\Git\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj": {}
   },
   "projects": {
-    "E:\\Sanda\\ITU\\Archi Log\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj": {
+    "E:\\Sanda\\ITU\\Archi Log\\Git\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Sanda\\ITU\\Archi Log\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj",
+        "projectUniqueName": "E:\\Sanda\\ITU\\Archi Log\\Git\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj",
         "projectName": "PanneauSolaire",
-        "projectPath": "E:\\Sanda\\ITU\\Archi Log\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj",
+        "projectPath": "E:\\Sanda\\ITU\\Archi Log\\Git\\PanneauSolaire\\PanneauSolaire\\PanneauSolaire.csproj",
         "packagesPath": "C:\\Users\\Sanda\\.nuget\\packages\\",
-        "outputPath": "E:\\Sanda\\ITU\\Archi Log\\PanneauSolaire\\PanneauSolaire\\obj\\",
+        "outputPath": "E:\\Sanda\\ITU\\Archi Log\\Git\\PanneauSolaire\\PanneauSolaire\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

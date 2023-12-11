@@ -1,23 +1,87 @@
 ﻿@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
+@using PanneauSolaire.Models.Entity;
+@using PanneauSolaire.Models.ViewStruct;
 @{
-
+    StructCoupure structCoupure = new StructCoupure();
+    List<Secteur> secteurs = structCoupure.secteurs;
 }
 <div class="container-fluid">
-    <div class="p-3 mb-2 bg-light text-dark">Voir la prevision de coupure</div>
-    <div class="row g-2">
-        <div class="col-md">
-            <div class="form-floating">
-                <input type="date" class="form-control" id="floatingInputGrid" placeholder="" value="">
-                <label for="floatingInputGrid">Date du jour</label>
+    <form asp-action="HeureCoupure" asp-controller="Specific">
+        <div class="row mb-3">
+            <div class="col-md">
+                <div class="form-floating formDiv">
+                    <input type="date" name="jour" class="form-control" id="floatingInputGrid" placeholder="" value="">
+                    <label for="floatingInputGrid">Date du jour</label>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="form-floating">
+                    <button type="submit" class="btn btn-outline-info btn-lg formDiv formButton" style="height: stretch;">Voir</button>
+                </div>
             </div>
         </div>
-        <div class="col-md">
-            <div class="form-floating">
-                <button type="button" class="btn btn-outline-info btn-lg" style="height: stretch;">Voir</button>
+    </form>
+
+    <form asp-action="HeureCoupureSecteur" asp-controller="Specific">
+        <div class="row mb-3">
+            <div class="col-md">
+                <div class="form-floating">
+                    <select name="idsecteur" class="form-select" id="floatingSelectGrid" aria-label="Floating label select example">
+                        @foreach(Secteur secteur in secteurs)
+                        {
+                            <option value="@secteur.Id">@secteur.Refs</option>   
+                        }
+                    </select>
+                  <label for="floatingSelectGrid">Secteurs</label>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="form-floating formDiv">
+                    <input type="date" name="jour" class="form-control" id="floatingInputGrid" placeholder="" value="">
+                    <label for="floatingInputGrid">Date du jour</label>
+                </div>
+            </div>
+            <div class="col-md">
+                <div class="form-floating">
+                    <button type="submit" class="btn btn-outline-info btn-lg formDiv formButton" style="height: stretch;">Voir</button>
+                </div>
             </div>
         </div>
-    </div>
+    </form>
+
+    @if(ViewBag.Exceptions != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <strong>Exception: </strong>@ViewBag.Exceptions.Message
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if(ViewBag.TuplesPrevisions != null){
+        foreach((Secteur,List<Prevision>) tuple in ViewBag.TuplesPrevisions){
+            Secteur secteur = tuple.Item1;
+            List<Prevision> previsions = tuple.Item2;
+
+            <div class="row mb-3">
+                <div class="p-3 mb-2 bg-light text-dark">@secteur.Refs</div>
+                
+                @foreach (Prevision prevision in previsions)
+                {
+                    <div class="col-md-2">
+                        <b>Heure: @prevision.Heure</b>
+                        @if(prevision.Meteo != null){
+                            <p>Lumiere: @prevision.Meteo.Lumiere / @prevision.Meteo.LumiereMax</p>    
+                        }
+                        <p>Panneau: @prevision.PuissancePanneau</p>
+                        <p>Batterie: @prevision.PuissanceBatterie</p>
+                        <p>Personnes: @prevision.NbPersonne</p>
+                        <p>ConsUnitaire: @prevision.ConsMoyenne</p>
+                    </div>
+                }
+            </div>
+        }
+    }
 </div>
 
