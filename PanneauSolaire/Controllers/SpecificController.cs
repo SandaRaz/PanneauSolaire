@@ -18,6 +18,11 @@ namespace PanneauSolaire.Controllers
             return View();
         }
 
+        public IActionResult ListePrevision()
+        {
+            return View();
+        }
+
         public IActionResult HeureCoupure(DateTime jour)
         {
             DateOnly datejour = DateOnly.FromDateTime(jour);
@@ -37,7 +42,7 @@ namespace PanneauSolaire.Controllers
             cnx.Close();
 
             ViewBag.TuplesPrevisions = tuplesPrevisions;
-            return View("Coupure");
+            return View("ListePrevision");
         }
 
         public IActionResult HeureCoupureSecteur(string idsecteur, DateTime jour)
@@ -68,7 +73,7 @@ namespace PanneauSolaire.Controllers
 
             cnx.Close();
 
-            return View("Coupure");
+            return View("ListePrevision");
         }
     }
 }

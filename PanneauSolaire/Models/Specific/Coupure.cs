@@ -140,6 +140,47 @@ namespace PanneauSolaire.Models.Specific
             }
             return coupure;
         }
+        public static List<Coupure> getCoupures(NpgsqlConnection cnx)
+        {
+            List<Coupure> coupures = new List<Coupure>();
+
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            string sql = "SELECT * FROM coupure";
+            using (NpgsqlCommand command = new NpgsqlCommand(sql, cnx))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        Coupure? coupure = null;
+                        while (reader.Read())
+                        {
+                            Object? hCoup = reader["heurecoupure"];
+                            TimeOnly? heurecoupure = (hCoup != DBNull.Value) ? TimeOnly.FromTimeSpan((TimeSpan)hCoup) : null;
+
+                            coupure = new Coupure(Convert.ToString(reader["id"]), Convert.ToString(reader["idsecteur"]),
+                                DateOnly.FromDateTime(Convert.ToDateTime(reader["jour"])),
+                                heurecoupure);
+
+                            coupures.Add(coupure);
+                        }
+                    }
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+            return coupures;
+        }
 
         public static List<Coupure> getCoupures(NpgsqlConnection cnx, string idSecteur)
         {
@@ -157,6 +198,51 @@ namespace PanneauSolaire.Models.Specific
             using (NpgsqlCommand command = new NpgsqlCommand(sql, cnx))
             {
                 command.Parameters.AddWithValue("@idsecteur", idSecteur);
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        Coupure? coupure = null;
+                        while (reader.Read())
+                        {
+                            Object? hCoup = reader["heurecoupure"];
+                            TimeOnly? heurecoupure = (hCoup != DBNull.Value) ? TimeOnly.FromTimeSpan((TimeSpan)hCoup) : null;
+
+                            coupure = new Coupure(Convert.ToString(reader["id"]), Convert.ToString(reader["idsecteur"]),
+                                DateOnly.FromDateTime(Convert.ToDateTime(reader["jour"])),
+                                heurecoupure);
+
+                            coupures.Add(coupure);
+                        }
+                    }
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+            return coupures;
+        }
+        public static List<Coupure> getCoupuresJourDeLaSemaine(NpgsqlConnection cnx, DateOnly jour)
+        {
+            List<Coupure> coupures = new List<Coupure>();
+
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            int dayOfWeek = (int)jour.DayOfWeek;
+            if (dayOfWeek == 0) dayOfWeek = 7;
+
+            string sql = "SELECT * FROM coupure WHERE (EXTRACT(IsoDoW FROM coupure.jour) = @dayOfWeek)";
+            using (NpgsqlCommand command = new NpgsqlCommand(sql, cnx))
+            {
+                command.Parameters.AddWithValue("@dayOfWeek", dayOfWeek);
                 using (NpgsqlDataReader reader = command.ExecuteReader())
                 {
                     if (reader.HasRows)
@@ -247,47 +333,23 @@ namespace PanneauSolaire.Models.Specific
             TimeOnly heureActuelle = heureDebut;
             while (heureActuelle <= heureFin)
             {
-                double capPanneauxAct = 0;
-                InfoPersonnes? infoPersonnesPresent = null;
-                double nbPersonnePresent = 0;
-
+                /* --------- Capacite batteries --------- */
                 double capBatteriesAct = Batterie.chargeDisponible(batteries);
-
-                /* --- Info sur nombre eleve et salle --- */
-                foreach (Salle salle in salles)
-                {
-                    infoPersonnesPresent = salle.PersonnePresent(cnx, jour, heureActuelle);
-                    if (infoPersonnesPresent == null)
-                    {
-                        /* --- Manao analyse de donnees tany aloha --- */
-                        //Console.WriteLine("Mila manao analyse de donnees tany aloha: " + salle.AnalysePersonnesPresentJourDeLaSemaine(cnx, jour, heureActuelle));
-                        nbPersonnePresent += salle.AnalysePersonnesPresentJourDeLaSemaine(cnx, jour, heureActuelle);
-                    }
-                    else
-                    {
-                        nbPersonnePresent += infoPersonnesPresent.NbPersonne;
-                    }
-                }
                 /* -------------------------------------- */
-
-                /* ----------- Meteo et Panneau solaire ------------ */
+                /* --- Info sur nombre eleve et salle --- */
+                double nbPersonnePresent = Salle.totalNombrePersonnesPresents(cnx, jour, heureActuelle, salles);
+                /* -------------------------------------- */
+                /* ------ Meteo et Panneau solaire ------ */
                 Meteo? meteoDuJour = Meteo.getMeteoAssezProche(cnx, jour, heureActuelle);
-                foreach (Panneau panneau in panneaux)
-                {
-                    if (meteoDuJour != null)
-                    {
-                        capPanneauxAct += panneau.PuissanceActuelle(meteoDuJour);
-                    }
-                    else
-                    {
-                        throw new Exception($"METEO NULL A {heureActuelle} DU JOUR {jour}");
-                    }
-                }
+                double capPanneauxAct = Panneau.PuissanceTotaleFournit(meteoDuJour, panneaux);
+                /* -------------------------------------- */
 
                 double totaleConsommation = nbPersonnePresent * (consUnitaire * trancheHeure);
                 double chargeADeduireBatteries = totaleConsommation - (capPanneauxAct * trancheHeure);
                 if (Batterie.IsanyBatterieMananaChargeDispo(batteries) > 0)
                 {
+                    Batterie.VerifierAutresSecteur(cnx, jour, heureActuelle, consUnitaire, trancheHeure, batteries);
+
                     if (Batterie.chargeDisponible(batteries) >= chargeADeduireBatteries)
                     {
                         Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);

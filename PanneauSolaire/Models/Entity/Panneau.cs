@@ -46,10 +46,29 @@
         }
 
         /* ------- FONC. ------- */
-        public double PuissanceActuelle(Meteo meteo)
+        public double PuissanceFournit(Meteo meteo)
         {
-            double puissanceActuelle = (this.Puissance * meteo.Lumiere) / meteo.LumiereMax;
-            return puissanceActuelle;
+            double puissanceFournit = (this.Puissance * meteo.Lumiere) / meteo.LumiereMax;
+            return puissanceFournit;
+        }
+
+        public static double PuissanceTotaleFournit(Meteo? meteoDuJour, List<Panneau> panneaux)
+        {
+            double capPanneauxAct = 0;
+
+            foreach (Panneau panneau in panneaux)
+            {
+                if (meteoDuJour != null)
+                {
+                    capPanneauxAct += panneau.PuissanceFournit(meteoDuJour);
+                }
+                else
+                {
+                    throw new Exception($"METEO NON COMPLET OU VIDE");
+                }
+            }
+
+            return capPanneauxAct;
         }
 
         /* ----- FIN FONC. ----- */

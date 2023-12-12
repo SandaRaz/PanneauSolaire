@@ -1,4 +1,7 @@
-﻿namespace PanneauSolaire.Models.Entity
+﻿using Npgsql;
+using PanneauSolaire.Models.Cnx;
+
+namespace PanneauSolaire.Models.Entity
 {
     public class Batterie
     {
@@ -121,6 +124,59 @@
             return isany;
         }
 
+        public static void VerifierAutresSecteur(NpgsqlConnection cnx, DateOnly jour, TimeOnly heure, double consMoy, double trancheHeure, List<Batterie> batteries)
+        {
+            bool isclosed = false;
+            if(cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            foreach(Batterie batterie in batteries)
+            {
+                List<Secteur> secteurs = batterie.getSecteursUsingThisBatterie(cnx);
+                foreach(Secteur secteur in secteurs)
+                {
+                    List<Batterie> batteriesDuSecteur = secteur.getBatteries(cnx);
+                    for(int i = 0; i< batteriesDuSecteur.Count; i++)
+                    {
+                        if (batteriesDuSecteur[i].Id.Equals(batterie.Id))
+                        {
+                            batteriesDuSecteur[i] = batterie;
+                        }
+                    }
+
+                    /* --------- Capacite batteries --------- */
+                    double capBatteriesAct = Batterie.chargeDisponible(batteriesDuSecteur);
+                    /* -------------------------------------- */
+                    /* --- Info sur nombre eleve et salle --- */
+                    double nbPersonnePresent = Salle.totalNombrePersonnesPresents(cnx, jour, heure, secteur.getSalles(cnx));
+                    /* -------------------------------------- */
+                    /* ------ Meteo et Panneau solaire ------ */
+                    Meteo? meteoDuJour = Meteo.getMeteoAssezProche(cnx, jour, heure);
+                    double capPanneauxAct = Panneau.PuissanceTotaleFournit(meteoDuJour, secteur.getPanneaux(cnx));
+                    /* -------------------------------------- */
+
+                    double consTotale = nbPersonnePresent * (consMoy * trancheHeure);
+                    double chargeADeduireBatteries = consTotale - (capPanneauxAct * trancheHeure);
+                    if (Batterie.IsanyBatterieMananaChargeDispo(batteriesDuSecteur) > 0)
+                    {
+                        if (Batterie.chargeDisponible(batteriesDuSecteur) >= chargeADeduireBatteries)
+                        {
+                            Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteriesDuSecteur);
+                        }
+                    }
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+        }
+
         public static void DeduireChargeAuBatteries(double chargeADeduire, List<Batterie> batteries)
         {
             int possedeCharge = Batterie.IsanyBatterieMananaChargeDispo(batteries);
@@ -154,5 +210,49 @@
                 }
             }
         }
+
+    /* ----- CRUD ----- */
+        public List<Secteur> getSecteursUsingThisBatterie(NpgsqlConnection cnx)
+        {
+            List<Secteur> secteurs = new List<Secteur>();
+
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            string sql = "SELECT * FROM secteurbatteriescomplet WHERE idbatterie=@idbatterie";
+            using (NpgsqlCommand command = new NpgsqlCommand(sql, cnx))
+            {
+                command.Parameters.AddWithValue("@idbatterie", this.Id);
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        Secteur? secteur = null;
+                        while (reader.Read())
+                        {
+                            secteur = new Secteur(Convert.ToString(reader["idsecteur"]), Convert.ToString(reader["secteur"]));
+                            secteurs.Add(secteur);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("GET LIST OF SECTEUR HASN'T ANY ROW");
+                    }
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+            return secteurs;
+        }
+
+    /* ---------------- */
     }
 }

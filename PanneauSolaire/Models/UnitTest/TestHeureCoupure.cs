@@ -20,8 +20,8 @@ namespace PanneauSolaire.Models.UnitTest
                 DateOnly jour = new DateOnly(2023, 12, 5);
 
                 var heureDebutFin = secteur.getHeureDebutFin(cnx, jour);
-                TimeOnly heureDebut = (heureDebutFin.Item1 != null) ? (TimeOnly)heureDebutFin.Item1 : new TimeOnly();
-                TimeOnly heureFin = (heureDebutFin.Item2 != null) ? (TimeOnly)heureDebutFin.Item2 : new TimeOnly();
+                TimeOnly heureDebut = heureDebutFin.Item1;
+                TimeOnly heureFin = heureDebutFin.Item2;
 
                 double suppCons = 60;
 

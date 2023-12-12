@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "28f133a4-c622-49ea-9a11-cfaad951fee9": {
+      "ProjectGuid": "28f133a4-c622-49ea-9a11-cfaad951fee9",
+      "DisplayName": "PanneauSolaire",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

@@ -56,7 +56,8 @@ namespace PanneauSolaire.Models.Entity
             TimeOnly heureFin = heures.Item2;
 
             List<double> consommations = new List<double>();
-            List<Coupure> coupures = Coupure.getCoupures(cnx, this.Id);
+            List<Coupure> coupures = Coupure.getCoupures(cnx);
+
             /* --- Iteration @ liste de coupure tany aloha --- */
             Console.WriteLine("***** --- Iteration @ liste de coupure tany aloha --- *****");
             foreach (Coupure coupure in coupures)
@@ -75,23 +76,42 @@ namespace PanneauSolaire.Models.Entity
                     }
 
                     double vraiConsUnitaire = suppositionConsUnitaire;
+                    double difference = (heureCoupure > heurePrevision) ?
+                            Math.Abs((heureCoupure - heurePrevision).TotalMinutes) :
+                            Math.Abs((heurePrevision - heureCoupure).TotalMinutes);
 
-                    while (Math.Abs((int)(heureCoupure - heurePrevision).TotalMinutes) > 3) /* dt > 10 minutes */
+                    if (incr < 0)
                     {
-                        vraiConsUnitaire += incr;
-                        testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
-                        Console.WriteLine($"Difference = {Math.Abs(heureCoupure.Minute - heurePrevision.Minute)} , Heure de Prevision {testPrevision} et Vrai Heure de Coupure {coupure.HeureCoupure}");
-                        if (testPrevision != null)
+                        while (heurePrevision < heureCoupure) /* dt > 10 minutes */
                         {
-                            heurePrevision = (TimeOnly)testPrevision;
-                        }
-
-                        if (heureCoupure == heurePrevision)
-                        {
-                            break;
+                            vraiConsUnitaire += incr;
+                            testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
+                            if (testPrevision != null)
+                            {
+                                heurePrevision = (TimeOnly)testPrevision;
+                            }
+                            if (heureCoupure == heurePrevision)
+                            {
+                                break;
+                            }
                         }
                     }
-
+                    else
+                    {
+                        while (heurePrevision > heureCoupure)
+                        {
+                            vraiConsUnitaire += incr;
+                            testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
+                            if (testPrevision != null)
+                            {
+                                heurePrevision = (TimeOnly)testPrevision;
+                            }
+                            if (heureCoupure == heurePrevision)
+                            {
+                                break;
+                            }
+                        }
+                    }
                     consommations.Add(vraiConsUnitaire);
                 }
             }
@@ -144,60 +164,29 @@ namespace PanneauSolaire.Models.Entity
             TimeOnly heureActuelle = heureDebut;
             while (heureActuelle <= heureFin)
             {
-
-                double capPanneauxAct = 0;
-                double consTotale = 0;
-                InfoPersonnes? infoPersonnesPresent = null;
-                double nbPersonnePresent = 0;
-
+                /* --------- Capacite batteries --------- */
                 double capBatteriesAct = Batterie.chargeDisponible(batteries);
-
+                /* -------------------------------------- */
                 /* --- Info sur nombre eleve et salle --- */
-                double totalConsEleve = 0;
-                foreach (Salle salle in salles)
-                {
-                    totalConsEleve += salle.ConsMoyenne;
-                    infoPersonnesPresent = salle.PersonnePresent(cnx, jour, heureActuelle);
-                    if (infoPersonnesPresent == null)
-                    {
-                        /* --- Manao analyse de donnees @ Presence par salle tany aloha --- */
-                        Console.WriteLine("Mila manao analyse de donnees tany aloha: ");
-                        nbPersonnePresent += salle.AnalysePersonnesPresentJourDeLaSemaine(cnx, jour, heureActuelle);
-                    }
-                    else
-                    {
-                        nbPersonnePresent += infoPersonnesPresent.NbPersonne;
-                    }
-                }
+                double nbPersonnePresent = Salle.totalNombrePersonnesPresents(cnx, jour, heureActuelle, salles);
                 /* -------------------------------------- */
                 /* --- Moyenne consommation par eleve --- */
-
                 double moyenneConsUnitaire = this.getConsommationUnitaireMoyenneParIteration(cnx, jour);
-
                 /* -------------------------------------- */
-
-                /* ----------- Meteo et Panneau solaire ------------ */
+                /* ------ Meteo et Panneau solaire ------ */
                 Meteo? meteoDuJour = Meteo.getMeteoAssezProche(cnx, jour, heureActuelle);
-                foreach (Panneau panneau in panneaux)
-                {
-                    if (meteoDuJour != null)
-                    {
-                        capPanneauxAct += panneau.PuissanceActuelle(meteoDuJour);
-                    }
-                    else
-                    {
-                        throw new Exception($"METEO NULL A {heureActuelle} DU JOUR {jour}");
-                    }
-                }
-                /* -------------------------------------------------- */
+                double capPanneauxAct = Panneau.PuissanceTotaleFournit(meteoDuJour, panneaux);
+                /* -------------------------------------- */
 
                 previsions.Add(new Prevision(jour, heureActuelle, meteoDuJour, capPanneauxAct, Batterie.CapaciteReele(batteries),
                     nbPersonnePresent, moyenneConsUnitaire));
 
-                consTotale = nbPersonnePresent * (moyenneConsUnitaire * trancheHeure);
+                double consTotale = nbPersonnePresent * (moyenneConsUnitaire * trancheHeure);
                 double chargeADeduireBatteries = consTotale - (capPanneauxAct * trancheHeure);
                 if (Batterie.IsanyBatterieMananaChargeDispo(batteries) > 0)
                 {
+                    Batterie.VerifierAutresSecteur(cnx, jour, heureActuelle, moyenneConsUnitaire, trancheHeure, batteries);
+                    
                     if (Batterie.chargeDisponible(batteries) >= chargeADeduireBatteries)
                     {
                         Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);

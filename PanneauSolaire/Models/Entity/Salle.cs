@@ -127,6 +127,7 @@ namespace PanneauSolaire.Models.Entity
             return infosSalles;
         }
 
+        /* ----- FIN CRUD ----- */
         public static double MoyenneConsommationParSalle(List<Salle> salles)
         {
             double consommation = 0;
@@ -140,9 +141,6 @@ namespace PanneauSolaire.Models.Entity
             }
             return consommation;
         }
-
-        /* ----- FIN CRUD ----- */
-
         public InfoPersonnes? PersonnePresent(NpgsqlConnection cnx, DateOnly jour, TimeOnly heure)
         {
             InfoPersonnes? infos = null;
@@ -187,6 +185,40 @@ namespace PanneauSolaire.Models.Entity
                 cnx.Close();
             }
             return infos;
+        }
+
+        public static double totalNombrePersonnesPresents(NpgsqlConnection cnx, DateOnly jour, TimeOnly heureActuelle, List<Salle> salles)
+        {
+            double nbPersonnePresent = 0;
+
+            bool isclosed = false;
+            if(cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            foreach (Salle salle in salles)
+            {
+                InfoPersonnes? infoPersonnesPresent = salle.PersonnePresent(cnx, jour, heureActuelle);
+                if (infoPersonnesPresent == null)
+                {
+                    /* --- Manao analyse de donnees @ Presence par salle tany aloha --- */
+                    Console.WriteLine("Mila manao analyse de donnees tany aloha: ");
+                    nbPersonnePresent += salle.AnalysePersonnesPresentJourDeLaSemaine(cnx, jour, heureActuelle);
+                }
+                else
+                {
+                    nbPersonnePresent += infoPersonnesPresent.NbPersonne;
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+            return nbPersonnePresent;
         }
 
         public double AnalysePersonnesPresentJourDeLaSemaine(NpgsqlConnection cnx, DateOnly jour, TimeOnly heure)
