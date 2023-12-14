@@ -124,7 +124,7 @@ namespace PanneauSolaire.Models.Entity
             return isany;
         }
 
-        public static void VerifierAutresSecteur(NpgsqlConnection cnx, DateOnly jour, TimeOnly heure, double consMoy, double trancheHeure, List<Batterie> batteries)
+        public static void VerifierAutresSecteur(NpgsqlConnection cnx, string idSecteur, DateOnly jour, TimeOnly heure, double consMoy, double trancheHeure, List<Batterie> batteries)
         {
             bool isclosed = false;
             if(cnx.State == System.Data.ConnectionState.Closed)
@@ -136,7 +136,7 @@ namespace PanneauSolaire.Models.Entity
 
             foreach(Batterie batterie in batteries)
             {
-                List<Secteur> secteurs = batterie.getSecteursUsingThisBatterie(cnx);
+                List<Secteur> secteurs = batterie.getSecteursUsingThisBatterie(cnx, idSecteur);
                 foreach(Secteur secteur in secteurs)
                 {
                     List<Batterie> batteriesDuSecteur = secteur.getBatteries(cnx);
@@ -253,6 +253,48 @@ namespace PanneauSolaire.Models.Entity
             return secteurs;
         }
 
-    /* ---------------- */
+        public List<Secteur> getSecteursUsingThisBatterie(NpgsqlConnection cnx, string exceptIdSecteur)
+        {
+            List<Secteur> secteurs = new List<Secteur>();
+
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            string sql = "SELECT * FROM secteurbatteriescomplet WHERE idbatterie=@idbatterie AND idsecteur!=@idsecteur";
+            using (NpgsqlCommand command = new NpgsqlCommand(sql, cnx))
+            {
+                command.Parameters.AddWithValue("@idbatterie", this.Id);
+                command.Parameters.AddWithValue("@idsecteur", exceptIdSecteur);
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        Secteur? secteur = null;
+                        while (reader.Read())
+                        {
+                            secteur = new Secteur(Convert.ToString(reader["idsecteur"]), Convert.ToString(reader["secteur"]));
+                            secteurs.Add(secteur);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("GET LIST OF SECTEUR HASN'T ANY ROW");
+                    }
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+            return secteurs;
+        }
+
+        /* ---------------- */
     }
 }

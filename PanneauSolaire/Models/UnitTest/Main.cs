@@ -10,6 +10,13 @@ namespace PanneauSolaire.Models.UnitTest
     {
         public static void main(string[] args)
         {
+            TimeOnly to = new TimeOnly(21,00);
+            for (int i=0;i<10;i++)
+            {
+                to = to.AddHours(1);
+                Console.WriteLine("Time to: " + to);
+            }
+
 
             TimeOnly a = new TimeOnly(8,15);
             TimeOnly b = new TimeOnly(9,20);

@@ -320,7 +320,86 @@ namespace PanneauSolaire.Models.Specific
 
         /* -------------------------- */
 
-        public static TimeOnly? getHeurePrevisionCoupure(NpgsqlConnection cnx, Secteur secteur,DateOnly jour, TimeOnly heureDebut, TimeOnly heureFin, double consUnitaire)
+        public static DateTime? getHeurePrevisionCoupure(NpgsqlConnection cnx, Secteur secteur, DateOnly jour, TimeOnly heureDebut, TimeOnly heureFin, double consUnitaire)
+        {
+            /* --- collecting data from database --- */
+            List<Panneau> panneaux = secteur.getPanneaux(cnx);
+            List<Batterie> batteries = secteur.getBatteries(cnx);
+            List<Salle> salles = secteur.getSalles(cnx);
+            /* ------------------------------------- */
+
+            DateTime? dateHeurePrevision = null;
+
+            double trancheHeure = 1;
+            DateTime dateHeureActuelle = new DateTime(jour.Year, jour.Month, jour.Day, heureDebut.Hour, heureDebut.Minute, 0);
+            DateTime dateHeureFin = new DateTime(jour.Year, jour.Month, jour.Day, heureFin.Hour, heureFin.Minute, 0);
+            DateTime dateHeureMaxJour = new DateTime(jour.Year, jour.Month, jour.Day, 23, 59, 0);
+            while (dateHeureActuelle <= dateHeureFin)
+            {
+                /* --------- Capacite batteries --------- */
+                double capBatteriesAct = Batterie.chargeDisponible(batteries);
+                /* -------------------------------------- */
+                /* --- Info sur nombre eleve et salle --- */
+                double nbPersonnePresent = Salle.totalNombrePersonnesPresents(cnx, jour, TimeOnly.FromDateTime(dateHeureActuelle), salles);
+                /* -------------------------------------- */
+                /* ------ Meteo et Panneau solaire ------ */
+                Console.WriteLine("Date actuellement (ao anaty Coupure.cs) >>>>> "+dateHeureActuelle);
+                Meteo? meteoDuJour = Meteo.getMeteoAssezProche(cnx, jour, TimeOnly.FromDateTime(dateHeureActuelle));
+                double capPanneauxAct = Panneau.PuissanceTotaleFournit(meteoDuJour, panneaux);
+                /* -------------------------------------- */
+
+                double totaleConsommation = nbPersonnePresent * (consUnitaire * trancheHeure);
+                double chargeADeduireBatteries = totaleConsommation - (capPanneauxAct * trancheHeure);
+                if (Batterie.IsanyBatterieMananaChargeDispo(batteries) > 0)
+                {
+                    Batterie.VerifierAutresSecteur(cnx, secteur.Id, jour, TimeOnly.FromDateTime(dateHeureActuelle), consUnitaire, trancheHeure, batteries);
+
+                    if (Batterie.chargeDisponible(batteries) >= chargeADeduireBatteries)
+                    {
+                        Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);
+                    }
+                    else /* ------ Coupure de courant ------ */
+                    {
+                        double resteBatterie = Batterie.chargeDisponible(batteries);
+                        double hPrev = (resteBatterie / (chargeADeduireBatteries));
+
+                        Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);
+
+                        dateHeurePrevision = dateHeureActuelle.AddHours(hPrev);
+                        break;
+                    }
+                }
+                else /* ------ Coupure de courant ------ */
+                {
+                    Console.WriteLine("-----------------------------------------------------------------------------------------------------------------------------------------");
+                    double resteBatterie = Batterie.chargeDisponible(batteries);
+                    double hPrev = (resteBatterie / (chargeADeduireBatteries));
+
+                    Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);
+
+                    dateHeurePrevision = dateHeureActuelle.AddHours(hPrev);
+                    break;
+                }
+
+                dateHeureActuelle = dateHeureActuelle.AddHours(trancheHeure);
+
+                if (dateHeureActuelle >= dateHeureMaxJour)
+                {
+                    jour = jour.AddDays(1);
+                    dateHeureActuelle = new DateTime(jour.Year, jour.Month, jour.Day, dateHeureActuelle.Hour, dateHeureActuelle.Minute, 0);
+                    var heures = secteur.getHeureDebutFin(cnx, jour);
+                    heureFin = heures.Item2;
+                    dateHeureFin = new DateTime(jour.Year, jour.Month, jour.Day, heureFin.Hour, heureFin.Minute, 0);
+                    dateHeureMaxJour = new DateTime(jour.Year, jour.Month, jour.Day, 23, 59, 0);
+                }
+            }
+            Console.WriteLine($"Pour ConsMoy {consUnitaire} coupure dans {TimeOnly.FromDateTime(dateHeureActuelle)}");
+
+            return dateHeurePrevision;
+        }
+
+
+        public static TimeOnly? getHeurePrevisionCoupure2(NpgsqlConnection cnx, Secteur secteur,DateOnly jour, TimeOnly heureDebut, TimeOnly heureFin, double consUnitaire)
         {
             /* --- collecting data from database --- */
             List<Panneau> panneaux = secteur.getPanneaux(cnx);
@@ -348,7 +427,7 @@ namespace PanneauSolaire.Models.Specific
                 double chargeADeduireBatteries = totaleConsommation - (capPanneauxAct * trancheHeure);
                 if (Batterie.IsanyBatterieMananaChargeDispo(batteries) > 0)
                 {
-                    Batterie.VerifierAutresSecteur(cnx, jour, heureActuelle, consUnitaire, trancheHeure, batteries);
+                    Batterie.VerifierAutresSecteur(cnx, secteur.Id, jour, heureActuelle, consUnitaire, trancheHeure, batteries);
 
                     if (Batterie.chargeDisponible(batteries) >= chargeADeduireBatteries)
                     {
@@ -371,5 +450,6 @@ namespace PanneauSolaire.Models.Specific
 
             return heurePrevision;
         }
+    
     }
 }

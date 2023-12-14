@@ -4,7 +4,7 @@ using PanneauSolaire.Models.UnitTest;
 TestHeureCoupure.main(args);
 //TestConsommationMoyenne.main(args);
 //TestDetailPrevision.main(args);
-//Main.main(args);
+Main.main(args);
 
 /* ------------------------- */
 

@@ -74,6 +74,55 @@ VALUES('SAL7006','2023-11-28','08:00:00','12:00:00',10);
 INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
 VALUES('SAL7006','2023-11-28','13:00:00','17:00:00',20);
 
+-------------------------------------------------------------------------------------------------------------------------------
+
+TRUNCATE TABLE Secteur cascade;
+TRUNCATE TABLE Panneau cascade;
+TRUNCATE TABLE Batterie cascade;
+TRUNCATE TABLE Salle cascade;
+TRUNCATE TABLE InfoSalle;
+TRUNCATE TABLE Coupure;
+TRUNCATE TABLE SecteurPanneaux;
+TRUNCATE TABLE SecteurBatteries;
+TRUNCATE TABLE SecteurSalles;
+
+------ Secteur
+INSERT INTO Secteur(id,refs) VALUES('SEC7001','Secteur 1');
+INSERT INTO Secteur(id,refs) VALUES('SEC7002','Secteur 2');
+
+------ Panneau Solaire
+INSERT INTO Panneau(id,refs,puissance) VALUES('PAN7001','A',5000);
+INSERT INTO Panneau(id,refs,puissance) VALUES('PAN7002','B',5000);
+
+------ Batterie
+INSERT INTO Batterie(id,refs,puissance,limitCons) VALUES('BAT7001','A',60000,50);
+INSERT INTO Batterie(id,refs,puissance,limitCons) VALUES('BAT7002','B',60000,50);
+
+------ Salle
+INSERT INTO Salle(id,refs,consMoyenne) VALUES('SAL7001','Amphi A',50);
+INSERT INTO Salle(id,refs,consMoyenne) VALUES('SAL7002','Amphi B',50);
+
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7001','2023-12-04','08:00:00','12:00:00',100);
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7001','2023-12-04','12:00:00','17:00:00',100);
+
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7002','2023-12-04','08:00:00','12:00:00',150);
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7002','2023-12-04','12:00:00','17:00:00',150);
+
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7001','2023-12-05','08:00:00','12:00:00',100);
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7001','2023-12-05','12:00:00','17:00:00',100);
+
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7002','2023-12-05','08:00:00','12:00:00',150);
+INSERT INTO InfoSalle(idsalle,jour,heureDebut,heureFin,nombrePersonne)
+VALUES('SAL7002','2023-12-05','12:00:00','17:00:00',150);
+
+
 ------ Coupure
 INSERT INTO Coupure(id,idsecteur,jour,heurecoupure)
-VALUES('COU7001','SEC7001','2023-12-05','10:18:00');
+VALUES('COU7001','SEC7001','2023-12-04','10:30:00');

@@ -25,11 +25,11 @@ namespace PanneauSolaire.Models.UnitTest
 
                 double suppCons = 60;
 
-                TimeOnly? heureCoupure = Coupure.getHeurePrevisionCoupure(cnx, secteur, jour, heureDebut, 
+                DateTime? dateHeureCoupure = Coupure.getHeurePrevisionCoupure(cnx, secteur, jour, heureDebut, 
                     heureFin, suppCons);
-                if (heureCoupure != null)
+                if (dateHeureCoupure != null)
                 {
-                    Console.WriteLine($"Pour consommation unitaire {suppCons} le {jour} coupure a : {heureCoupure}");
+                    Console.WriteLine($"Pour consommation unitaire {suppCons} le {jour} coupure a : {dateHeureCoupure}");
                 }
 
             }

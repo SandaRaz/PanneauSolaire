@@ -37,7 +37,8 @@ namespace PanneauSolaire.Models.Entity
             Refs = refs ?? throw new ArgumentNullException(nameof(refs));
         }
 
-    /* ---- FONCTIONNALITE ---- */
+        /* ---- FONCTIONNALITE ---- */
+
         public double getConsommationUnitaireMoyenneParIteration(NpgsqlConnection cnx, DateOnly jour)
         {
             bool isclosed = false;
@@ -63,8 +64,225 @@ namespace PanneauSolaire.Models.Entity
             foreach (Coupure coupure in coupures)
             {
                 double incr = 0.3;
-                TimeOnly? testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, suppositionConsUnitaire);
+                DateTime? testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, suppositionConsUnitaire);
+
+                if (testPrevision != null && coupure.HeureCoupure != null)
+                {
+                    DateTime dateHeurePrevision = (DateTime)testPrevision;
+                    TimeOnly heureCoupure = (TimeOnly)coupure.HeureCoupure;
+                    DateTime dateHeureCoupure = new DateTime(coupure.Jour.Year, coupure.Jour.Month, coupure.Jour.Day,
+                        heureCoupure.Hour,heureCoupure.Minute,0);
+
+                    if (dateHeurePrevision < dateHeureCoupure)
+                    {
+                        incr *= -1;
+                    }
+
+                    double vraiConsUnitaire = suppositionConsUnitaire;
+                    double difference = (dateHeureCoupure > dateHeurePrevision) ?
+                            Math.Abs((dateHeureCoupure - dateHeurePrevision).TotalMinutes) :
+                            Math.Abs((dateHeurePrevision - dateHeureCoupure).TotalMinutes);
+
+                    if (incr < 0)
+                    {
+                        while (dateHeurePrevision < dateHeureCoupure) /* dt > 10 minutes */
+                        {
+                            vraiConsUnitaire += incr;
+                            testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
+                            if (testPrevision != null)
+                            {
+                                dateHeurePrevision = (DateTime)testPrevision;
+                            }
+                            if (dateHeureCoupure == dateHeurePrevision)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        while (dateHeurePrevision > dateHeureCoupure)
+                        {
+                            vraiConsUnitaire += incr;
+                            testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
+                            if (testPrevision != null)
+                            {
+                                dateHeurePrevision = (DateTime)testPrevision;
+                            }
+                            if (dateHeureCoupure == dateHeurePrevision)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    consommations.Add(vraiConsUnitaire);
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+
+            double result = 0;
+            foreach (double cons in consommations)
+            {
+                result += cons;
+            }
+
+            if (consommations.Count > 0)
+            {
+                return result / consommations.Count;
+            }
+            else
+            {
+                return suppositionConsUnitaire;
+            }
+        }
+
+        public List<Prevision> getDetailsPrevisions(NpgsqlConnection cnx, DateOnly jour)
+        {
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            List<Prevision> previsions = new List<Prevision>();
+
+            /* --- collecting data from database --- */
+            List<Panneau> panneaux = this.getPanneaux(cnx);
+            List<Batterie> batteries = this.getBatteries(cnx);
+            List<Salle> salles = this.getSalles(cnx);
+            /* ------------------------------------- */
+
+            /* --- alaina ny heure voalohany sy ny heure farany ao anaty Presence(InfoSalle) --- */
+            var heures = this.getHeureDebutFin(cnx, jour);
+            TimeOnly heureDebut = heures.Item1;
+            TimeOnly heureFin = heures.Item2;
+            /* --------------------------------------------------------------------------------- */
+
+            double trancheHeure = 1;
+            DateTime dateHeureActuelle = new DateTime(jour.Year,jour.Month,jour.Day,heureDebut.Hour,heureDebut.Minute,0);
+            DateTime dateHeureFin = new DateTime(jour.Year, jour.Month, jour.Day, heureFin.Hour, heureFin.Minute, 0);
+            DateTime dateHeureMaxJour = new DateTime(jour.Year, jour.Month, jour.Day, 23, 59, 0);
+
+            while (dateHeureActuelle <= dateHeureFin)
+            {
+                /* --------- Capacite batteries --------- */
+                double capBatteriesAct = Batterie.chargeDisponible(batteries);
+                /* -------------------------------------- */
+                /* --- Info sur nombre eleve et salle --- */
+                double nbPersonnePresent = Salle.totalNombrePersonnesPresents(cnx, DateOnly.FromDateTime(dateHeureActuelle), 
+                    TimeOnly.FromDateTime(dateHeureActuelle), salles);
+                /* -------------------------------------- */
+                /* --- Moyenne consommation par eleve --- */
+                double moyenneConsUnitaire = this.getConsommationUnitaireMoyenneParIteration(cnx, jour);
+                /* -------------------------------------- */
+                /* ------ Meteo et Panneau solaire ------ */
+                Console.WriteLine("Dernier heure actuellement >>>>> "+dateHeureActuelle);
+                Meteo? meteoDuJour = Meteo.getMeteoAssezProche(cnx, jour, TimeOnly.FromDateTime(dateHeureActuelle));
+                double capPanneauxAct = Panneau.PuissanceTotaleFournit(meteoDuJour, panneaux);
+                /* -------------------------------------- */
+
+                previsions.Add(new Prevision(jour, TimeOnly.FromDateTime(dateHeureActuelle), meteoDuJour, capPanneauxAct, Batterie.CapaciteReele(batteries),
+                    nbPersonnePresent, moyenneConsUnitaire));
+
+                double consTotale = nbPersonnePresent * (moyenneConsUnitaire * trancheHeure);
+                double chargeADeduireBatteries = consTotale - (capPanneauxAct * trancheHeure);
+                Console.WriteLine("Charge a deduire batterie: " + chargeADeduireBatteries);
+                Console.WriteLine("Batterie.IsanyBatterieMananaChargeDispo(batteries): " + Batterie.IsanyBatterieMananaChargeDispo(batteries));
+                if (Batterie.IsanyBatterieMananaChargeDispo(batteries) > 0)
+                {
+                    Batterie.VerifierAutresSecteur(cnx, this.Id, jour, TimeOnly.FromDateTime(dateHeureActuelle), moyenneConsUnitaire, trancheHeure, batteries);
+
+                    if (Batterie.chargeDisponible(batteries) >= chargeADeduireBatteries)
+                    {
+                        Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);
+                    }
+                    else /* ------ Coupure de courant ------ */
+                    {
+                        double resteBatterie = Batterie.chargeDisponible(batteries);
+                        double hPrev = (resteBatterie / (chargeADeduireBatteries));
+                        DateTime heureCoupure = dateHeureActuelle.AddHours(hPrev);
+
+                        Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);
+
+                        previsions.Add(new Prevision(jour, TimeOnly.FromDateTime(heureCoupure), meteoDuJour, capPanneauxAct, Batterie.CapaciteReele(batteries),
+                        nbPersonnePresent, moyenneConsUnitaire));
+
+                        break;
+                    }
+                }
+                else /* ------ Coupure de courant ------ */
+                {
+                    Console.WriteLine("-----------------------------------------------------------------------------------------------------------------------------------------");
+                    double resteBatterie = Batterie.chargeDisponible(batteries);
+                    double hPrev = (resteBatterie / (chargeADeduireBatteries));
+                    DateTime heureCoupure = dateHeureActuelle.AddHours(hPrev);
+
+                    Batterie.DeduireChargeAuBatteries(chargeADeduireBatteries, batteries);
+
+                    previsions.Add(new Prevision(jour, TimeOnly.FromDateTime(heureCoupure), meteoDuJour, capPanneauxAct, Batterie.CapaciteReele(batteries),
+                    nbPersonnePresent, moyenneConsUnitaire));
+
+                    break;
+                }
+
+                Console.WriteLine($"Heure: {TimeOnly.FromDateTime(dateHeureActuelle)},panneauCap: {capPanneauxAct}, capBat: {capBatteriesAct} , totalCons: {consTotale}");
+
+                dateHeureActuelle = dateHeureActuelle.AddHours(trancheHeure);
                 
+                if (dateHeureActuelle >= dateHeureMaxJour)
+                {
+                    jour = jour.AddDays(1);
+                    dateHeureActuelle = new DateTime(jour.Year, jour.Month, jour.Day, dateHeureActuelle.Hour, dateHeureActuelle.Minute, 0);
+                    heures = this.getHeureDebutFin(cnx, jour);
+                    heureFin = heures.Item2;
+                    dateHeureFin = new DateTime(jour.Year, jour.Month, jour.Day, heureFin.Hour, heureFin.Minute, 0);
+                    dateHeureMaxJour = new DateTime(jour.Year, jour.Month, jour.Day, 23, 59, 0);
+                }
+                
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+
+            return previsions;
+        }
+
+
+        public double getConsommationUnitaireMoyenneParIteration2(NpgsqlConnection cnx, DateOnly jour)
+        {
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            double suppositionConsUnitaire = Salle.MoyenneConsommationParSalle(this.getSalles(cnx));
+            Console.WriteLine($"    MOYENNE SUPPOSITION DE CONSOMMATION UNITAIRE: {suppositionConsUnitaire}");
+
+            var heures = this.getHeureDebutFin(cnx, jour);
+            TimeOnly heureDebut = heures.Item1;
+            TimeOnly heureFin = heures.Item2;
+
+            List<double> consommations = new List<double>();
+            List<Coupure> coupures = Coupure.getCoupures(cnx);
+
+            /* --- Iteration @ liste de coupure tany aloha --- */
+            Console.WriteLine("***** --- Iteration @ liste de coupure tany aloha --- *****");
+            foreach (Coupure coupure in coupures)
+            {
+                double incr = 0.3;
+                TimeOnly? testPrevision = Coupure.getHeurePrevisionCoupure2(cnx, this, jour, heureDebut, heureFin, suppositionConsUnitaire);
+
                 if (testPrevision != null && coupure.HeureCoupure != null)
                 {
                     TimeOnly heurePrevision = (TimeOnly)testPrevision;
@@ -85,7 +303,7 @@ namespace PanneauSolaire.Models.Entity
                         while (heurePrevision < heureCoupure) /* dt > 10 minutes */
                         {
                             vraiConsUnitaire += incr;
-                            testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
+                            testPrevision = Coupure.getHeurePrevisionCoupure2(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
                             if (testPrevision != null)
                             {
                                 heurePrevision = (TimeOnly)testPrevision;
@@ -101,7 +319,7 @@ namespace PanneauSolaire.Models.Entity
                         while (heurePrevision > heureCoupure)
                         {
                             vraiConsUnitaire += incr;
-                            testPrevision = Coupure.getHeurePrevisionCoupure(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
+                            testPrevision = Coupure.getHeurePrevisionCoupure2(cnx, this, jour, heureDebut, heureFin, vraiConsUnitaire);
                             if (testPrevision != null)
                             {
                                 heurePrevision = (TimeOnly)testPrevision;
@@ -136,7 +354,7 @@ namespace PanneauSolaire.Models.Entity
                 return suppositionConsUnitaire;
             }
         }
-        public List<Prevision> getDetailsPrevisions(NpgsqlConnection cnx, DateOnly jour)
+        public List<Prevision> getDetailsPrevisions2(NpgsqlConnection cnx, DateOnly jour)
         {
             bool isclosed = false;
             if(cnx.State == System.Data.ConnectionState.Closed)
@@ -162,6 +380,7 @@ namespace PanneauSolaire.Models.Entity
             
             double trancheHeure = 1;
             TimeOnly heureActuelle = heureDebut;
+
             while (heureActuelle <= heureFin)
             {
                 /* --------- Capacite batteries --------- */
@@ -171,7 +390,7 @@ namespace PanneauSolaire.Models.Entity
                 double nbPersonnePresent = Salle.totalNombrePersonnesPresents(cnx, jour, heureActuelle, salles);
                 /* -------------------------------------- */
                 /* --- Moyenne consommation par eleve --- */
-                double moyenneConsUnitaire = this.getConsommationUnitaireMoyenneParIteration(cnx, jour);
+                double moyenneConsUnitaire = this.getConsommationUnitaireMoyenneParIteration2(cnx, jour);
                 /* -------------------------------------- */
                 /* ------ Meteo et Panneau solaire ------ */
                 Meteo? meteoDuJour = Meteo.getMeteoAssezProche(cnx, jour, heureActuelle);
@@ -183,9 +402,11 @@ namespace PanneauSolaire.Models.Entity
 
                 double consTotale = nbPersonnePresent * (moyenneConsUnitaire * trancheHeure);
                 double chargeADeduireBatteries = consTotale - (capPanneauxAct * trancheHeure);
+                Console.WriteLine("Charge a deduire batterie: "+chargeADeduireBatteries);
+                Console.WriteLine("Batterie.IsanyBatterieMananaChargeDispo(batteries): " + Batterie.IsanyBatterieMananaChargeDispo(batteries));
                 if (Batterie.IsanyBatterieMananaChargeDispo(batteries) > 0)
                 {
-                    Batterie.VerifierAutresSecteur(cnx, jour, heureActuelle, moyenneConsUnitaire, trancheHeure, batteries);
+                    Batterie.VerifierAutresSecteur(cnx, this.Id, jour, heureActuelle, moyenneConsUnitaire, trancheHeure, batteries);
                     
                     if (Batterie.chargeDisponible(batteries) >= chargeADeduireBatteries)
                     {
@@ -201,6 +422,7 @@ namespace PanneauSolaire.Models.Entity
 
                         previsions.Add(new Prevision(jour, heureCoupure, meteoDuJour, capPanneauxAct, Batterie.CapaciteReele(batteries),
                         nbPersonnePresent, moyenneConsUnitaire));
+
                         break;
                     }
                 }
@@ -208,6 +430,15 @@ namespace PanneauSolaire.Models.Entity
                 Console.WriteLine($"Heure: {heureActuelle},panneauCap: {capPanneauxAct}, capBat: {capBatteriesAct} , totalCons: {consTotale}");
 
                 heureActuelle = heureActuelle.AddHours(trancheHeure);
+                /*
+                if (heureActuelle >= new TimeOnly(23, 59))
+                {
+                    heureActuelle = new TimeOnly(00, 00);
+                    jour = jour.AddDays(1);
+                    heures = this.getHeureDebutFin(cnx, jour);
+                    heureFin = heures.Item2;
+                }
+                */
             }
 
             if (isclosed)
