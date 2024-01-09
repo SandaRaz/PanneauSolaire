@@ -17,13 +17,21 @@ namespace PanneauSolaire.Models.UnitTest
             Secteur? secteur = Secteur.getById(cnx, "SEC7001");
             if (secteur != null)
             {
-                DateOnly jour = new DateOnly(2023, 12, 5);
+                DateOnly jour = new DateOnly(2023, 11, 1);
 
                 var heureDebutFin = secteur.getHeureDebutFin(cnx, jour);
                 TimeOnly heureDebut = heureDebutFin.Item1;
                 TimeOnly heureFin = heureDebutFin.Item2;
 
-                double suppCons = 60;
+                double suppCons = 76.99999999999974;
+
+                List<DateTime> coupures = Coupure.getHeurePrevisionsCoupures(cnx, secteur, jour, heureDebut, heureFin, suppCons);
+                Console.WriteLine($" Liste coupures: ");
+                foreach (DateTime heure in coupures)
+                {
+                    Console.WriteLine($"    => {heure}");
+                }
+
 
                 DateTime? dateHeureCoupure = Coupure.getHeurePrevisionCoupure(cnx, secteur, jour, heureDebut, 
                     heureFin, suppCons);

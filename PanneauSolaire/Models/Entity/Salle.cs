@@ -205,7 +205,43 @@ namespace PanneauSolaire.Models.Entity
                 if (infoPersonnesPresent == null)
                 {
                     /* --- Manao analyse de donnees @ Presence par salle tany aloha --- */
-                    Console.WriteLine("Mila manao analyse de donnees tany aloha: ");
+                    //Console.WriteLine("Mila manao analyse de donnees tany aloha: ");
+                    nbPersonnePresent += salle.AnalysePersonnesPresentJourDeLaSemaine(cnx, jour, heureActuelle);
+                }
+                else
+                {
+                    nbPersonnePresent += infoPersonnesPresent.NbPersonne;
+                }
+            }
+
+            if (isclosed)
+            {
+                cnx.Close();
+            }
+            return nbPersonnePresent;
+        }
+
+        public static double totalNombrePersonnesPresents(NpgsqlConnection cnx, DateOnly jour, TimeOnly heureActuelle, Salle[] salles)
+        {
+            double nbPersonnePresent = 0;
+
+            bool isclosed = false;
+            if (cnx.State == System.Data.ConnectionState.Closed)
+            {
+                cnx = Connex.getConnection();
+                cnx.Open();
+                isclosed = true;
+            }
+
+            for(int i = 0; i < salles.Count(); i++)
+            {
+                Salle salle = salles[i];
+
+                InfoPersonnes? infoPersonnesPresent = salle.PersonnePresent(cnx, jour, heureActuelle);
+                if (infoPersonnesPresent == null)
+                {
+                    /* --- Manao analyse de donnees @ Presence par salle tany aloha --- */
+                    //Console.WriteLine("Mila manao analyse de donnees tany aloha: ");
                     nbPersonnePresent += salle.AnalysePersonnesPresentJourDeLaSemaine(cnx, jour, heureActuelle);
                 }
                 else

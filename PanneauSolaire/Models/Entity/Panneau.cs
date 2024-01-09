@@ -74,6 +74,26 @@ namespace PanneauSolaire.Models.Entity
             return capPanneauxAct;
         }
 
+        public static double PuissanceTotaleFournit(Meteo? meteoDuJour, Panneau[] panneaux)
+        {
+            double capPanneauxAct = 0;
+
+            for(int i = 0; i < panneaux.Count(); i++)
+            {
+                if (meteoDuJour != null)
+                {
+                    capPanneauxAct += panneaux[i].PuissanceFournit(meteoDuJour);
+                }
+                else
+                {
+                    throw new Exception($"METEO NON COMPLET OU VIDE");
+                }
+            }
+
+            return capPanneauxAct;
+        }
+
+
         public static double PuissanceTotaleFournit(NpgsqlConnection cnx, Meteo? meteoDuJour, Secteur secteur, List<Panneau> panneaux)
         {
             double capPanneauxAct = 0;

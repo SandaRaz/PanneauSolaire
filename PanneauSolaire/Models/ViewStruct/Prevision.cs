@@ -11,6 +11,7 @@ namespace PanneauSolaire.Models.ViewStruct
         double puissanceBatterie;
         double nbPersonne;
         double consMoyenne;
+        bool coupure;
 
         public DateOnly Jour
         {
@@ -48,7 +49,14 @@ namespace PanneauSolaire.Models.ViewStruct
             set { consMoyenne = Math.Round(value, 2); }
         }
 
-        public Prevision(DateOnly jour, TimeOnly heure, Meteo? meteo, double puissancePanneau, double puissanceBatterie, double nbPersonne, double consMoyenne)
+        public bool Coupure
+        {
+            get { return coupure; }
+            set { coupure = value; }
+        }
+
+        public Prevision(DateOnly jour, TimeOnly heure, Meteo? meteo, double puissancePanneau, double puissanceBatterie, 
+            double nbPersonne, double consMoyenne, bool coupure)
         {
             Jour = jour;
             Heure = heure;
@@ -57,6 +65,7 @@ namespace PanneauSolaire.Models.ViewStruct
             PuissanceBatterie = puissanceBatterie;
             NbPersonne = nbPersonne;
             ConsMoyenne = consMoyenne;
+            Coupure = coupure;
         }
     }
 }

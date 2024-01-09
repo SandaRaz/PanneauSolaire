@@ -1,5 +1,3 @@
-TRUNCATE TABLE Meteo;
-
 ------ METEO
 INSERT INTO Meteo(jour,heure,lumiere,lumiereMax) VALUES('2023-11-01','08:00:00',8,10);
 INSERT INTO Meteo(jour,heure,lumiere,lumiereMax) VALUES('2023-11-01','09:00:00',7,10);

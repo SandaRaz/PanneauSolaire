@@ -1,10 +1,11 @@
 /* ----- TEST UNITAIRE ----- */
 using PanneauSolaire.Models.UnitTest;
 
+//BatterieTest.main(args);
 TestHeureCoupure.main(args);
 //TestConsommationMoyenne.main(args);
 //TestDetailPrevision.main(args);
-Main.main(args);
+//Main.main(args);
 
 /* ------------------------- */
 

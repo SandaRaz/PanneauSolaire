@@ -110,6 +110,15 @@ namespace PanneauSolaire.Models.Entity
             }
             return chargeTotale;
         }
+        public static double chargeDisponible(Batterie[] batteries)
+        {
+            double chargeTotale = 0;
+            for(int i = 0; i < batteries.Count(); i++)
+            {
+                chargeTotale += batteries[i].Charge;
+            }
+            return chargeTotale;
+        }
 
         public static int IsanyBatterieMananaChargeDispo(List<Batterie> batteries)
         {
@@ -117,6 +126,18 @@ namespace PanneauSolaire.Models.Entity
             foreach(Batterie batterie in batteries)
             {
                 if (batterie.Charge > 0)
+                {
+                    isany++;
+                }
+            }
+            return isany;
+        }
+        public static int IsanyBatterieMananaChargeDispo(Batterie[] batteries)
+        {
+            int isany = 0;
+            for(int i = 0; i < batteries.Count(); i++)
+            {
+                if (batteries[i].Charge > 0)
                 {
                     isany++;
                 }
@@ -205,13 +226,97 @@ namespace PanneauSolaire.Models.Entity
                 if (i == (batteries.Count) && (chargeADeduire > 0))
                 {
                     possedeCharge = Batterie.IsanyBatterieMananaChargeDispo(batteries);
-                    partADeduire = chargeADeduire / possedeCharge;
+                    if (possedeCharge > 0)
+                    {
+                        partADeduire = chargeADeduire / possedeCharge;
+                    }
                     i = 0;
                 }
             }
         }
 
-    /* ----- CRUD ----- */
+        public static void DeduireChargeAuBatteries(double chargeADeduire, Batterie[] batteries)
+        {
+            int possedeCharge = Batterie.IsanyBatterieMananaChargeDispo(batteries);
+            double partADeduire = chargeADeduire / possedeCharge;
+
+            int i = 0;
+            while (i < batteries.Count())
+            {
+                if (chargeADeduire <= 0 || Batterie.chargeDisponible(batteries) <= 0)
+                {
+                    break;
+                }
+
+                if (batteries[i].Charge >= partADeduire)
+                {
+                    chargeADeduire -= partADeduire;
+                    batteries[i].Charge -= partADeduire;
+                }
+                else
+                {
+                    chargeADeduire -= batteries[i].Charge;
+                    batteries[i].Charge = 0;
+                }
+                i++;
+
+                if (i == (batteries.Count()) && (chargeADeduire > 0))
+                {
+                    possedeCharge = Batterie.IsanyBatterieMananaChargeDispo(batteries);
+                    if (possedeCharge > 0)
+                    {
+                        partADeduire = chargeADeduire / possedeCharge;
+                    }
+                    i = 0;
+                }
+            }
+        }
+
+        public static void ChargerBatterie(double chargePlus, List<Batterie> batteries)
+        {
+            int isanaBatterie = batteries.Count();
+            if (isanaBatterie > 0)
+            {
+                double partCharge = chargePlus / isanaBatterie;
+                double reste = 0;
+                int i = 0;
+                while (i < isanaBatterie)
+                {
+                    double puissanceValide = ((batteries[i].Puissance * 50) / 100);
+                    if ((batteries[i].Charge + partCharge) > puissanceValide)
+                    {
+                        reste += (batteries[i].Charge + partCharge) - puissanceValide;
+                    }
+                    batteries[i].Charge = Math.Min((batteries[i].Charge + partCharge), puissanceValide);
+
+                    i++;
+                }
+            }
+        }
+        public static void ChargerBatterie(double chargePlus, Batterie[] batteries)
+        {
+            int isanaBatterie = batteries.Count();
+            if (isanaBatterie > 0)
+            {
+                double partCharge = chargePlus / isanaBatterie;
+                double reste = 0;
+                int i = 0;
+                while (i < isanaBatterie)
+                {
+                    double puissanceValide = ((batteries[i].Puissance * 50) / 100);
+                    if ((batteries[i].Charge + partCharge) > puissanceValide)
+                    {
+                        reste += (batteries[i].Charge + partCharge) - puissanceValide;
+                    }
+                    batteries[i].Charge = Math.Min((batteries[i].Charge + partCharge), puissanceValide);
+
+                    i++;
+                }
+            }
+        }
+
+
+        /* ----- CRUD ----- */
         public List<Secteur> getSecteursUsingThisBatterie(NpgsqlConnection cnx)
         {
             List<Secteur> secteurs = new List<Secteur>();
